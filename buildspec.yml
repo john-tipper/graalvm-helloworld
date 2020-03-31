@@ -1,0 +1,14 @@
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - 'choco install graalvm visualstudio2017-workload-vctools /Y'
+      - '. "C:\Program Files\GraalVM\graalvm-ce-java11-20.0.0\bin\gu.cmd" install native-image'
+      - 'cmd.exe /c "call `"C:\Program Files (x86)\Microsoft Visual Studio\2017\BuildTools\VC\Auxiliary\Build\vcvars64.bat`" && set > %temp%\vcvars.txt "'
+
+  build:
+    commands:
+      - .\gradlew shadowjar
+      - 'Get-Content "$env:temp\vcvars.txt" | Foreach-Object { if ($_ -match "^(.*?)=(.*)$") { Set-Content "env:\$($matches[1])" $matches[2] } }; . "C:\Program Files\GraalVM\graalvm-ce-java11-20.0.0\bin\native-image.cmd" --verbose --static --no-fallback -H:+ReportExceptionStackTraces -jar build\libs\GraalVmExample-1.0-SNAPSHOT-all.jar helloworld'
+      - .\helloworld
